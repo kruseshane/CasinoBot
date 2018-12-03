@@ -105,14 +105,15 @@ def playRoulette(bet, player): # Ex. !roulette Black 100 or !roulette 18 100
     colorBet = ""
     numberBet = -1
     thirdsBet = ""
-    red = 'red'
-    black = 'black'
+    evenOddBet = ""
 
     # Split bet string into segments to handle
-    if bet[1].lower() == black or bet[1].lower() == red:
+    if bet[1].lower() == 'black' or bet[1].lower() == 'red':
         colorBet = bet[1]
     elif bet[1] in thirds:
         thirdsBet = bet[1]
+    elif bet[1].lower() == 'even' or bet[1].lower() == 'odd':
+        evenOddBet = bet[1]
     elif int(bet[1]) >= 0 and int(bet[1]) <= 36:
         numberBet = int(bet[1])
     else:
@@ -129,6 +130,7 @@ def playRoulette(bet, player): # Ex. !roulette Black 100 or !roulette 18 100
     elif result in greenNums:
         finalResult = 'Green ' + str(result)
 
+	# Logic behind payouts (very messy, needs to be cleaned up with functions)
     finalResultSegs = finalResult.split(' ')
     if bet[1] == colorBet: # If the player bets Red or Black (Note: player cannot bet on Green)
         if bet[1].lower() == finalResultSegs[0].lower():
@@ -154,6 +156,23 @@ def playRoulette(bet, player): # Ex. !roulette Black 100 or !roulette 18 100
         else:
             updateBalance(player, False, bet[2], 0)
             return finalResult + '\nYou Lose...'
+    elif bet[1] == evenOddBet:
+        if bet[1].lower() == 'odd':
+            if result % 2 == 1:
+                payout = int(bet[2]) * 2 # 2:1 odds
+                updateBalance(player, True, bet[2], payout)
+                return finalResult + '\nYou Win!  ----  Payout: ' + str(payout)
+            else:
+                updateBalance(player, False, bet[2], 0)
+                return finalResult + '\nYou Lose...'
+        elif bet[1].lower == 'even':
+            if result % 2 == 0:
+                payout = int(bet[2]) * 2 # 2:1 odds
+                updateBalance(player, True, bet[2], payout)
+                return finalResult + '\nYou Win!  ----  Payout: ' + str(payout)
+            else:
+                updateBalance(player, False, bet[2], 0)
+                return finalResult + '\nYou Lose...'
     elif int(bet[1]) == numberBet: # If the player bets a number (1, 2, 3, ...)
         if int(bet[1]) == result:
             payout = int(bet[2]) * 35 # 35:1 odds
@@ -219,8 +238,4 @@ def scanGames():
 
 setUpDB()
 showUsersTable()
-
-while (True):
-    scanGames()
-    print('Sleeping for 10 seconds')
-    time.sleep(10)
+scanGames()
