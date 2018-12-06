@@ -15,7 +15,7 @@ BALANCE_MESSAGE = 'You must have 100 credits or less to request more. Your curre
 IN_DB_MSG = 'You are already signed up!'
 SUBREDDIT = 'lasreddittesting'
 BOSS = 'lasreddit_boss'
-ROULETTE_POST = 'ROULETTE CHECKPOINT 1'
+ROULETTE_POST = 'ROULETTE CHECKPOINT 2'
 
 def setUpDB():
     global cursor
@@ -70,7 +70,6 @@ def checkInbox():
             message.mark_read()
             message.reply('You currently have a balance of ' + str(data[1]) + ' credits')
 
-
 def showUsersTable():
     cursor.execute('''SELECT * FROM users''')
     all = cursor.fetchall();
@@ -92,7 +91,12 @@ def updateBalance(user, bool, betAmount, payout):
         cursor.execute('''UPDATE users SET total = ? WHERE username = ?''', (newBalance, user))
         db.commit()
 
-def playRoulette(bet, player): # Ex. !roulette Black 100 or !roulette 18 100
+def genPayout(betAmt, odds, player, bet):
+    payout = betAmt * odds
+    updateBalance(player, True, bet[1], payout)
+    return payout
+
+def playRoulette(bet, player): # Ex. "!roulette Black 100" or "!roulette 18 100" or "!roulette black,100 even,100
     redNums = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]
     blackNums = [2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35]
     greenNums = [0]
@@ -102,85 +106,119 @@ def playRoulette(bet, player): # Ex. !roulette Black 100 or !roulette 18 100
             0.0267, 0.0267, 0.0267, 0.0267, 0.0267, 0.0267, 0.0267, 0.0267, 0.0267,
             0.0267, 0.0267, 0.0267, 0.0267, 0.0267, 0.0267, 0.0267, 0.0267, 0.0267,
             0.0388]
-    colorBet = ""
-    numberBet = -1
-    thirdsBet = ""
-    evenOddBet = ""
+    replyStr = ""
+    finalResult = ""
+    result = 0
 
     # Split bet string into segments to handle
-    if bet[1].lower() == 'black' or bet[1].lower() == 'red':
-        colorBet = bet[1]
-    elif bet[1] in thirds:
-        thirdsBet = bet[1]
-    elif bet[1].lower() == 'even' or bet[1].lower() == 'odd':
-        evenOddBet = bet[1]
-    elif int(bet[1]) >= 0 and int(bet[1]) <= 36:
-        numberBet = int(bet[1])
+
+    def genResult():
+        # Generate results
+        return numpy.random.choice(numpy.arange(0, 37), p=probs)
+
+    def verifyResult(result):
+        # Verify results
+        if result in redNums:
+            return 'Red ' + str(result)
+        elif result in blackNums:
+            return 'Black ' + str(result)
+        elif result in greenNums:
+            return 'Green ' + str(result)
+        else:
+            return None
+
+    # returns a list containing payout (if applicable) and reply string
+    def datLogicTho(bet, finalResult, player):
+        returnStr = ""
+        if len(bet) == 3:
+            bet = [bet[1], bet[2]]
+        theMainBet = str(bet[0])
+        wager = int(bet[1])
+        print(theMainBet + ' ' + str(wager))
+    	# Logic behind payouts
+        finalResultSegs = finalResult.split(' ')
+        if theMainBet.lower() == 'black' or theMainBet.lower() == 'red': # If the player bets Red or Black (Note: player cannot bet on Green)
+            if theMainBet.lower() == finalResultSegs[0].lower():
+                payout = genPayout(wager, 2, player, bet) # 2:1 odds
+                returnStr = finalResult + '\nYou Win!  ----  Payout: ' + str(payout) + '\n\n'
+            else:
+                updateBalance(player, False, wager, 0)
+                returnStr = finalResult + '\nYou Lose...'  + '\n\n'
+        elif theMainBet in thirds: # If the player bets one of the dozens (1st 12, 2nd 12, 3rd 12)
+            if theMainBet == '1st12' and (result >= 1 and result <= 12):
+                payout = genPayout(wager, 2, player, bet) # 2:1 odds
+                returnStr = finalResult + '\nYou Win!  ----  Payout: ' + str(payout) + '\n\n'
+            elif theMainBet == '2nd12' and (result >= 13 and result <= 24):
+                payout = genPayout(wager, 2, player, bet) # 2:1 odds
+                returnStr = finalResult + '\nYou Win!  ----  Payout: ' + str(payout) + '\n\n'
+            elif theMainBet == '3rd12' and (result >= 25 and result <= 36):
+                payout = genPayout(wager, 2, player, bet) # 2:1 odds
+                returnStr = finalResult + '\nYou Win!  ----  Payout: ' + str(payout) + '\n\n'
+            else:
+                updateBalance(player, False, wager, 0)
+                returnStr = finalResult + '\nYou Lose...' + '\n\n'
+        elif theMainBet.lower() == 'even' or theMainBet.lower() == 'odd': # If player bets for result to be an odd or even number (0 is automatic win)
+            if str(bet[1].lower()) == 'odd':
+                if result % 2 == 1:
+                    payout = genPayout(wager, 2, player, bet) # 2:1 odds
+                    returnStr = finalResult + '\nYou Win!  ----  Payout: ' + str(payout) + '\n\n'
+                else:
+                    updateBalance(player, False, wager, 0)
+                    returnStr = finalResult + '\nYou Lose...' + '\n\n'
+            elif theMainBet.lower() == 'even':
+                if result % 2 == 0:
+                    payout = genPayout(wager, 2, player, bet) # 2:1 odds
+                    returnStr = finalResult + '\nYou Win!  ----  Payout: ' + str(payout) + '\n\n'
+                else:
+                    updateBalance(player, False, wager, 0)
+                    returnStr = finalResult + '\nYou Lose...' + '\n\n'
+        elif int(theMainBet) >= 0 and int(theMainBet) <= 36: # If the player bets a number (1, 2, 3, ...)
+            if int(theMainBet) == result:
+                payout = genPayout(wager, 35, player, bet) # 35:1 odds
+                returnStr = finalResult + '\nYou Win!  ----  Payout: ' + str(payout) + '\n\n'
+            else:
+                updateBalance(player, False, wager, 0)
+                returnStr += finalResult + '\nYou Lose...' + '\n\n'
+        else:
+            print('Nothing')
+        return returnStr
+
+    result = genResult() # only do once
+    finalResult = verifyResult(result)
+    # Handle one bet or multiple bets
+    if ',' in bet[1]:
+        bet = [str(x) for x in bet]
+        print(bet)
+        for i in range(1, len(bet)): # handle each bet separately
+            print('Bet found: ' + bet[i])
+            if ',' in bet[i]:
+                data = bet[i].split(',') # black,100 -> [black, 100]
+                mainBet = str(data[0])
+                if mainBet.lower() == 'black' or mainBet.lower() == 'red':
+                    replyStr += datLogicTho(data, finalResult, player)
+                elif mainBet in thirds:
+                    replyStr += datLogicTho(data, finalResult, player)
+                elif mainBet.lower() == 'even' or mainBet.lower() == 'odd':
+                    replyStr += datLogicTho(data, finalResult, player)
+                elif int(data[0]) >= 0 and int(data[0]) <= 36:
+                    replyStr += datLogicTho(data, finalResult, player)
+                else:
+                    replyStr += 'Cannot make a bet on ' + bet[1] + '\n'
+            else:
+                replyStr += 'Invalid betting format'
     else:
-        return 'Cannot make a bet on ' + bet[1]
-
-    # Generate results
-    result = numpy.random.choice(numpy.arange(0, 37), p=probs)
-
-    # Verify results
-    if result in redNums:
-        finalResult = 'Red ' + str(result)
-    elif result in blackNums:
-        finalResult = 'Black ' + str(result)
-    elif result in greenNums:
-        finalResult = 'Green ' + str(result)
-
-	# Logic behind payouts (very messy, needs to be cleaned up with functions)
-    finalResultSegs = finalResult.split(' ')
-    if bet[1] == colorBet: # If the player bets Red or Black (Note: player cannot bet on Green)
-        if bet[1].lower() == finalResultSegs[0].lower():
-            payout = int(bet[2]) * 2 # 2:1 odds
-            updateBalance(player, True, bet[2], payout)
-            return finalResult + '\nYou Win!  ----  Payout: ' + str(payout)
+        if bet[1].lower() == 'black' or bet[1].lower() == 'red':
+            replyStr = datLogicTho(bet, finalResult, player)
+        elif bet[1] in thirds:
+            replyStr = datLogicTho(bet, finalResult, player)
+        elif bet[1].lower() == 'even' or bet[1].lower() == 'odd':
+            replyStr = datLogicTho(bet, finalResult, player)
+        elif int(bet[1]) >= 0 and int(bet[1]) <= 36:
+            replyStr = datLogicTho(bet, finalResult, player)
         else:
-            updateBalance(player, False, bet[2], 0)
-            return finalResult + '\nYou Lose...'
-    elif bet[1] == thirdsBet: # If the player bets one of the dozens (1st 12, 2nd 12, 3rd 12)
-        if bet[1] == '1st12' and (result >= 1 and result <= 12):
-            payout = int(bet[2]) * 2 # 2:1 odds
-            updateBalance(player, True, bet[2], payout)
-            return finalResult + '\nYou Win!  ----  Payout: ' + str(payout)
-        elif bet[1] == '2nd12' and (result >= 13 and result <= 24):
-            payout = int(bet[2]) * 2 # 2:1 odds
-            updateBalance(player, True, bet[2], payout)
-            return finalResult + '\nYou Win!  ----  Payout: ' + str(payout)
-        elif bet[1] == '3rd12' and (result >= 25 and result <= 36):
-            payout = int(bet[2]) * 2 # 2:1 odds
-            updateBalance(player, True, bet[2], payout)
-            return finalResult + '\nYou Win!  ----  Payout: ' + str(payout)
-        else:
-            updateBalance(player, False, bet[2], 0)
-            return finalResult + '\nYou Lose...'
-    elif bet[1] == evenOddBet:
-        if bet[1].lower() == 'odd':
-            if result % 2 == 1:
-                payout = int(bet[2]) * 2 # 2:1 odds
-                updateBalance(player, True, bet[2], payout)
-                return finalResult + '\nYou Win!  ----  Payout: ' + str(payout)
-            else:
-                updateBalance(player, False, bet[2], 0)
-                return finalResult + '\nYou Lose...'
-        elif bet[1].lower == 'even':
-            if result % 2 == 0:
-                payout = int(bet[2]) * 2 # 2:1 odds
-                updateBalance(player, True, bet[2], payout)
-                return finalResult + '\nYou Win!  ----  Payout: ' + str(payout)
-            else:
-                updateBalance(player, False, bet[2], 0)
-                return finalResult + '\nYou Lose...'
-    elif int(bet[1]) == numberBet: # If the player bets a number (1, 2, 3, ...)
-        if int(bet[1]) == result:
-            payout = int(bet[2]) * 35 # 35:1 odds
-            updateBalance(player, True, bet[2], payout)
-            return finalResult + '\nYou Win!  ----  Payout: ' + str(payout)
-        else:
-            updateBalance(player, False, bet[2], 0)
-            return finalResult + '\nYou Lose...'
+            replyStr = 'Cannot make a bet on ' + bet[1] + '\n'
+
+    return replyStr
 
 def verifyPlayer(player):
     cursor.execute('''SELECT * FROM users WHERE username = ?''', (player,))
@@ -207,7 +245,7 @@ def findRouletteGame(post):
             checkInbox()
             continue
         message = comment.body.split(' ')
-        if message[0] == '!roulette':
+        if message[0] == '!roulette' and ',' not in message[1]:
             print('Roulette game found')
             print(comment.body)
             player = comment.author.name
@@ -215,10 +253,30 @@ def findRouletteGame(post):
             if verifyPlayer(player) == True:
                 if verifyBetAmount(player, amount) == True:
                     print(player + ' verified')
-                    if message[0] == '!roulette':
-                        result = playRoulette(message, player)
-                        replyComment = comment.reply(result)
-                        replyComment.mod.distinguish(how='yes', sticky=False)
+                    result = playRoulette(message, player)
+                    replyComment = comment.reply(result)
+                    replyComment.mod.distinguish(how='yes', sticky=False)
+                else:
+                    replyComment = comment.reply('You lack the amount of credits to place this bet. Please message /u/lasreddit_boss !balance to see your current balance')
+                    replyComment.mod.distinguish(how='yes', sticky=False)
+            else:
+                comment.reply('You are not signed up yet. Please message /u/lasreddit_boss !signup to signup and start playing!')
+        elif message[0] == '!roulette' and ',' in message[1]:
+            print('Roulette game found')
+            print(comment.body)
+            player = comment.author.name
+            if verifyPlayer(player) == True:
+                sum = 0
+                for i in range(1, len(message)):
+                    if ',' in message[i]:
+                        data = message[i].split(',')
+                        sum = sum + int(data[1]) # add up all bet amounts
+                if verifyBetAmount(player, sum) == True:
+                    print(player + ' verified')
+                    result = playRoulette(message, player)
+                    print(result)
+                    replyComment = comment.reply(result)
+                    replyComment.mod.distinguish(how='yes', sticky=False)
                 else:
                     replyComment = comment.reply('You lack the amount of credits to place this bet. Please message /u/lasreddit_boss !balance to see your current balance')
                     replyComment.mod.distinguish(how='yes', sticky=False)
@@ -226,7 +284,7 @@ def findRouletteGame(post):
                 comment.reply('You are not signed up yet. Please message /u/lasreddit_boss !signup to signup and start playing!')
         else:
             print('Syntax Err')
-            comment.reply('Incorrect Syntax Ex: !roulette Black 150')
+            comment.reply('Incorrect Syntax: Refer to the rules for the game')
             db.commit()
 
 def scanGames():
@@ -239,3 +297,11 @@ def scanGames():
 setUpDB()
 showUsersTable()
 scanGames()
+
+"""
+!roulette red,10 black,10 5,10
+Result: Red 34
+Bet 1: Win, pays 20
+Bet 2: Lost
+Bet 3: Lost
+"""
