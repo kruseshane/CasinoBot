@@ -110,6 +110,7 @@ def playRoulette(bet, player): # Ex. "!roulette Black 100" or "!roulette 18 100"
     blackNums = [2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35]
     greenNums = [0]
     thirds = ['1st12', '2nd12', '3rd12']
+    halves = ['1stHalf', '2ndHalf']
     probs = [0.0267, 0.0267, 0.0267, 0.0267, 0.0267, 0.0267, 0.0267, 0.0267, 0.0267,
             0.0267, 0.0267, 0.0267, 0.0267, 0.0267, 0.0267, 0.0267, 0.0267, 0.0267,
             0.0267, 0.0267, 0.0267, 0.0267, 0.0267, 0.0267, 0.0267, 0.0267, 0.0267,
@@ -165,6 +166,16 @@ def playRoulette(bet, player): # Ex. "!roulette Black 100" or "!roulette 18 100"
             else:
                 updateBalance(player, False, wager, 0)
                 returnStr = '> Bet ' + str(betCount) + ': Lost, -'  + str(wager) + '\n\n'
+        elif theMainBet in halves: # If the player bets on one of the halves
+            if theMainBet == '1stHalf' and (result >= 1 and result <= 18):
+                payout = genPayout(wager, 2, player, bet) # 2:1 odds
+                returnStr = '> Bet ' + str(betCount) + ': Won, +' + str(wager) + '\n\n'
+            elif theMainBet == '2ndHalf' and (result >= 19 and result <= 36):
+                payout = genPayout(wager, 2, player, bet) # 2:1 odds
+                returnStr = '> Bet ' + str(betCount) + ': Won, +' + str(wager) + '\n\n'
+            else:
+                updateBalance(player, False, wager, 0)
+                returnStr = '> Bet ' + str(betCount) + ': Lost, -'  + str(wager) + '\n\n'
         elif theMainBet.lower() == 'even' or theMainBet.lower() == 'odd': # If player bets for result to be an odd or even number (0 is automatic win)
             if str(bet[1].lower()) == 'odd':
                 if result % 2 == 1:
@@ -212,6 +223,8 @@ def playRoulette(bet, player): # Ex. "!roulette Black 100" or "!roulette 18 100"
                     replyStr += datLogicTho(data, finalResult, player, count)
                 elif mainBet in thirds:
                     replyStr += datLogicTho(data, finalResult, player, count)
+                elif mainBet in halves:
+                    replyStr += datLogicTho(data, finalResult, player, count)
                 elif mainBet.lower() == 'even' or mainBet.lower() == 'odd':
                     replyStr += datLogicTho(data, finalResult, player, count)
                 elif int(data[0]) >= 0 and int(data[0]) <= 36:
@@ -224,6 +237,8 @@ def playRoulette(bet, player): # Ex. "!roulette Black 100" or "!roulette 18 100"
         if bet[1].lower() == 'black' or bet[1].lower() == 'red':
             replyStr += datLogicTho(bet, finalResult, player, 1)
         elif bet[1] in thirds:
+            replyStr += datLogicTho(bet, finalResult, player, 1)
+        elif bet[1] in halves:
             replyStr += datLogicTho(bet, finalResult, player, 1)
         elif bet[1].lower() == 'even' or bet[1].lower() == 'odd':
             replyStr += datLogicTho(bet, finalResult, player, 1)
@@ -330,7 +345,7 @@ def scanGames():
             findRouletteGame(postTitle)
 
 setUpDB()
-#setBalance('kproggsu', 1000000)
+setBalance('kproggsu', 1000000)
 showUsersTable()
 scanGames()
 
