@@ -12,13 +12,16 @@ The account associated with /r/LasReddit and /r/lasreddittesting is `lasreddit_b
 
 `!balance`: Allows the user to see their balance. The bot will PM you back with your current balance.
 
+There are posts on the subreddit that represent different games. To play, you must make a **_bet_** on the outcome. These **_bets_** are made by making a top level comment on the post (game) you would like to play.
+
 # Current games available
 
 - Roulette
 
-# How do I play Roulette?
+# How do I play?
 
-Routlette: Based on the [European Table](https://www.casinonewsdaily.com/roulette-guide/european-roulette/). To place a bet in roulette, read the following rules:
+### Routlette 
+Based on the [European Table](https://www.casinonewsdaily.com/roulette-guide/european-roulette/). To place a bet in roulette, read the following rules:
 
 - Initiating the game
   - Start your bet off with `!roulette`
@@ -26,6 +29,7 @@ Routlette: Based on the [European Table](https://www.casinonewsdaily.com/roulett
   - Red or Black
   - Even or Odd
   - 1st12, 2nd12, or 3rd12
+  - 1stHalf, 2ndHalf
   - Any number between and including 0-36
 - Single bet
   - `!roulette Red 30`
