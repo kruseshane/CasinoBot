@@ -102,7 +102,7 @@ def updateBalance(user, bool, betAmount, payout):
 
 def genPayout(betAmt, odds, player, bet):
     payout = betAmt * odds
-    updateBalance(player, True, wager, payout)
+    updateBalance(player, True, betAmt, payout)
     return payout
 
 def playRoulette(bet, player): # Ex. "!roulette Black 100" or "!roulette 18 100" or "!roulette black,100 even,100
@@ -155,13 +155,13 @@ def playRoulette(bet, player): # Ex. "!roulette Black 100" or "!roulette 18 100"
                 returnStr = '> Bet ' + str(betCount) + ': Lost, -'  + str(wager) + '\n\n'
         elif theMainBet in thirds: # If the player bets one of the dozens (1st 12, 2nd 12, 3rd 12)
             if theMainBet == '1st12' and (result >= 1 and result <= 12):
-                payout = genPayout(wager, 2, player, bet) # 2:1 odds
+                payout = genPayout(wager, 3, player, bet) # 3:1 odds
                 returnStr = '> Bet ' + str(betCount) + ': Won, +' + str(wager) + '\n\n'
             elif theMainBet == '2nd12' and (result >= 13 and result <= 24):
-                payout = genPayout(wager, 2, player, bet) # 2:1 odds
+                payout = genPayout(wager, 3, player, bet) # 3:1 odds
                 returnStr = '> Bet ' + str(betCount) + ': Won, +' + str(wager) + '\n\n'
             elif theMainBet == '3rd12' and (result >= 25 and result <= 36):
-                payout = genPayout(wager, 2, player, bet) # 2:1 odds
+                payout = genPayout(wager, 3, player, bet) # 3:1 odds
                 returnStr = '> Bet ' + str(betCount) + ': Won, +' + str(wager) + '\n\n'
             else:
                 updateBalance(player, False, wager, 0)
@@ -215,10 +215,13 @@ def playRoulette(bet, player): # Ex. "!roulette Black 100" or "!roulette 18 100"
             if ',' in bet[i]:
                 count = count + 1
                 data = bet[i].split(',') # black,100 -> [black, 100]
+                if (len(data) > 2): # If wager includes commas
+                    wager = ''
+                    for x in range(1, len(data)):
+                        wager += data[x]
+                    print (wager)
+                    data = [data[0], wager]
                 mainBet = str(data[0])
-
-                #for j in range(1, len(data)):
-
                 if mainBet.lower() == 'black' or mainBet.lower() == 'red':
                     replyStr += datLogicTho(data, finalResult, player, count)
                 elif mainBet in thirds:
@@ -311,7 +314,13 @@ def findRouletteGame(post):
                 for i in range(1, len(message)):
                     if ',' in message[i]:
                         data = message[i].split(',')
-                        sum = sum + int(data[1].strip(',')) # add up all bet amounts, strip commas
+                        if len(data) > 2:
+                            wager = ''
+                            for x in range(1, len(data)):
+                                wager += data[x]
+                            sum = sum + int(wager)
+                        else:
+                            sum = sum + int(data[1]) # add up bet amounts
                 if verifyBetAmount(player, sum) == True:
                     print(player + ' verified')
                     result = playRoulette(message, player)
@@ -345,7 +354,7 @@ def scanGames():
             findRouletteGame(postTitle)
 
 setUpDB()
-setBalance('kproggsu', 1000000)
+#setBalance('kproggsu', 1000000)
 showUsersTable()
 scanGames()
 
