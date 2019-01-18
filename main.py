@@ -15,7 +15,7 @@ BALANCE_MESSAGE = 'You must have 100 credits or less to request more. Your curre
 IN_DB_MSG = 'You are already signed up!'
 SUBREDDIT = 'lasreddittesting'
 BOSS = 'lasreddit_boss'
-ROULETTE_POST = 'ROULETTE CHECKPOINT 3'
+ROULETTE_POST = 'ROULETTE PUBLIC TEST 1'
 
 def setUpDB():
     global cursor
@@ -148,30 +148,30 @@ def playRoulette(bet, player): # Ex. "!roulette Black 100" or "!roulette 18 100"
         finalResultSegs = finalResult.split(' ')
         if theMainBet.lower() == 'black' or theMainBet.lower() == 'red': # If the player bets Red or Black (Note: player cannot bet on Green)
             if theMainBet.lower() == finalResultSegs[0].lower():
-                payout = genPayout(wager, 2, player, bet) # 2:1 odds
+                payout = genPayout(wager, 2, player, bet) # 1:1 odds
                 returnStr = '> Bet ' + str(betCount) + ': Won, +' + str(wager) + '\n\n'
             else:
                 updateBalance(player, False, wager, 0)
                 returnStr = '> Bet ' + str(betCount) + ': Lost, -'  + str(wager) + '\n\n'
         elif theMainBet in thirds: # If the player bets one of the dozens (1st 12, 2nd 12, 3rd 12)
             if theMainBet == '1st12' and (result >= 1 and result <= 12):
-                payout = genPayout(wager, 3, player, bet) # 3:1 odds
+                payout = genPayout(wager, 3, player, bet) # 2:1 odds
                 returnStr = '> Bet ' + str(betCount) + ': Won, +' + str(wager) + '\n\n'
             elif theMainBet == '2nd12' and (result >= 13 and result <= 24):
-                payout = genPayout(wager, 3, player, bet) # 3:1 odds
+                payout = genPayout(wager, 3, player, bet) # 2:1 odds
                 returnStr = '> Bet ' + str(betCount) + ': Won, +' + str(wager) + '\n\n'
             elif theMainBet == '3rd12' and (result >= 25 and result <= 36):
-                payout = genPayout(wager, 3, player, bet) # 3:1 odds
+                payout = genPayout(wager, 3, player, bet) # 2:1 odds
                 returnStr = '> Bet ' + str(betCount) + ': Won, +' + str(wager) + '\n\n'
             else:
                 updateBalance(player, False, wager, 0)
                 returnStr = '> Bet ' + str(betCount) + ': Lost, -'  + str(wager) + '\n\n'
         elif theMainBet in halves: # If the player bets on one of the halves
             if theMainBet == '1stHalf' and (result >= 1 and result <= 18):
-                payout = genPayout(wager, 2, player, bet) # 2:1 odds
+                payout = genPayout(wager, 2, player, bet) # 1:1 odds
                 returnStr = '> Bet ' + str(betCount) + ': Won, +' + str(wager) + '\n\n'
             elif theMainBet == '2ndHalf' and (result >= 19 and result <= 36):
-                payout = genPayout(wager, 2, player, bet) # 2:1 odds
+                payout = genPayout(wager, 2, player, bet) # 1:1 odds
                 returnStr = '> Bet ' + str(betCount) + ': Won, +' + str(wager) + '\n\n'
             else:
                 updateBalance(player, False, wager, 0)
@@ -179,14 +179,14 @@ def playRoulette(bet, player): # Ex. "!roulette Black 100" or "!roulette 18 100"
         elif theMainBet.lower() == 'even' or theMainBet.lower() == 'odd': # If player bets for result to be an odd or even number (0 is automatic win)
             if str(bet[1].lower()) == 'odd':
                 if result % 2 == 1:
-                    payout = genPayout(wager, 2, player, bet) # 2:1 odds
+                    payout = genPayout(wager, 2, player, bet) # 1:1 odds
                     returnStr = '> Bet ' + str(betCount) + ': Won, +' + str(wager) + '\n\n'
                 else:
                     updateBalance(player, False, wager, 0)
                     returnStr = '> Bet ' + str(betCount) + ': Lost, -'  + str(wager) + '\n\n'
             elif theMainBet.lower() == 'even':
                 if result % 2 == 0:
-                    payout = genPayout(wager, 2, player, bet) # 2:1 odds
+                    payout = genPayout(wager, 2, player, bet) # 1:1 odds
                     returnStr = '> Bet ' + str(betCount) + ': Won, +' + str(wager) + '\n\n'
                 else:
                     updateBalance(player, False, wager, 0)
